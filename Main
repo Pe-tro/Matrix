@@ -1,0 +1,212 @@
+#include <iostream>
+#define tab "\t"
+#define sep "\n---------------------------\n"
+using namespace std;
+
+struct indices 
+{
+	int x, y;
+	indices(int xx, int yy) { x = xx;y = yy; }
+	indices() { x = 0;y = 0; }
+};
+
+class matrix
+{
+private:
+
+	int Nx, Ny;
+	double** A;
+	
+public:
+
+	matrix();
+	matrix(int nx, int ny);
+	matrix(const matrix&);
+	~matrix();
+	matrix& operator=(const matrix&);
+	double& operator[] (const indices&);
+	friend ostream& operator<<(ostream&, const matrix&);
+	matrix operator*(const matrix&);
+	matrix operator+(const matrix&);
+	friend void Full(matrix&);
+};
+
+matrix:: matrix()
+{Nx = 0;Ny = 0;A = NULL;}
+
+matrix::matrix(int nx, int ny)
+{
+	Nx = nx; Ny = ny;
+	A = new double*[Nx];
+	for (int i = 0;i < Nx;++i)
+	{
+		A[i] = new double[Ny];
+		for (int j = 0;j < Ny;++j)
+		{
+			A[i][j] = 0;
+		}
+	}
+}
+
+matrix::~matrix()
+{
+	if (A != NULL)
+	{
+		for (int i = 0;i < Nx;++i)
+		{
+			delete[] A[i];
+		}
+		delete[] A;
+	}
+}
+
+matrix::matrix(const matrix& other)
+{
+	if (other.Nx == 0) {Nx = 0;Ny = 0;A = NULL;}
+	else
+	{
+		Nx = other.Nx;
+		Ny = other.Ny;
+		A = new double* [Nx];
+		for (int i = 0;i < Nx;++i)
+		{
+			A[i] = new double[Ny];
+			for (int j = 0;j < Ny;++j)
+			{
+				A[i][j] = other.A[i][j];
+			}
+		}
+	}
+}
+
+ostream& operator<<(ostream& os, const matrix& matrix)
+{
+	if(matrix.A==NULL)
+	{
+		os << "Null matrix";
+		return os;
+	}
+	else
+	{
+		for (int i = 0; i < matrix.Nx;++i)
+		{
+			for (int j = 0;j < matrix.Ny;++j)
+			{
+				os << matrix.A[i][j] << tab;
+			}
+			os << endl;
+		}
+		return os;
+	}
+}
+
+matrix& matrix::operator=(const matrix& other)
+{
+	if (this == &other) return *this;
+	else
+	{
+		if (other.A == NULL)
+		{
+			A == NULL;Nx = 0;Ny = 0;return *this;
+		}
+		if (A != NULL)
+		{
+			for (int i = 0;i < Nx;++i)
+			{
+				delete[] A[i];
+			}
+			delete[] A;
+		}
+		Nx = other.Nx;
+		Ny = other.Ny;
+		A = new double* [Nx];
+		for (int i = 0;i < Nx;++i)
+		{
+			A[i] = new double[Ny];
+			for (int j = 0;j < Ny;++j)
+			{
+				A[i][j] = other.A[i][j];
+			}
+		}
+		return *this;
+	}
+}
+
+matrix matrix::operator+(const matrix& other)
+{
+	 if (Nx == other.Nx && Ny == other.Ny) 
+	 {
+		 matrix M(Nx, Ny);
+		 for (int i = 0;i < Nx;++i)
+		 {
+			 for (int j = 0;j < Ny;++j)
+			 {
+				 M.A[i][j] = A[i][j] + other.A[i][j];
+			 }
+		 }
+		 return M;
+	 }
+	 else  return matrix();
+}
+
+matrix matrix::operator*(const matrix& other)
+{
+	 if ( Ny != other.Nx) { return matrix(); }
+	 else
+	 {
+		 matrix M(Nx, other.Ny);
+		 for (int i = 0;i < Nx;++i)
+		 {
+			 for (int j = 0;j < other.Ny;++j)
+			 {
+				 for (int a = 0;a < Ny;++a)
+				 {
+					 M.A[i][j] += A[i][a] * other.A[a][j];
+				 }
+			 }
+		 }
+		 return M;
+	 }
+}
+
+double& matrix::operator[] (const indices& foo)
+{
+	if (A != NULL && Nx >= foo.x && Ny >= foo.y)return A[foo.x][foo.y];
+	else cout << "There is not this element";
+}
+
+void Full(matrix &M)
+{	
+	//srand(time(0));
+	if (M.A == NULL) { cout << "I cant full it\n"; }
+	else
+	{
+		indices a;
+		for (int i = 0;i < M.Nx;++i)
+		{
+			for (int j = 0;j < M.Ny;++j)
+			{
+				a.x = i;a.y = j;
+				M[a] = rand() % 5;
+			}
+		}
+	}
+}
+
+int main()
+{
+	matrix M1,M2,M3(2,3),M4(2,3),M5(3,2);
+
+	//indices a(1, 2);
+	//M3[a] = 10;
+	
+	//cout << M1 <<sep<< M2 <<sep<< M3<<sep<< M4<<sep<<M5;
+
+	Full(M3);Full(M4);Full(M5);
+	//cout << sep << sep <<"M3 :\n"<< M3 << sep << "M4 :\n" << M4 << sep << "M5 :\n" << M5;
+
+	M1 = M5 + M4;
+	M2 = M3 * M5;
+
+	cout << sep << sep << "M1 :\n" << M1 << sep << "M2 :\n" << M2;
+}
